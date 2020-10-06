@@ -18,6 +18,7 @@ import "remix_tests.sol"; // this import is automatically injected by Remix.
 /// "passed": true - expected result for all tests.
 
 /**
+ * @author Surbhi Audichya 
  * @title Solidity test task
  */
 contract TestTask {
@@ -36,7 +37,10 @@ contract TestTask {
      * @dev result = "Example: 0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c, 1250"
      *
      * @notice You can see more examples in a tests.
-     *
+     * @notice Using subString, _toChecksumString, uintToString helper function
+     * @notice resp. https://ethereum.stackexchange.com/questions/31457/substring-in-solidity,
+     * @notice  https://ethereum.stackexchange.com/questions/63908/address-checksum-solidity-implementation,
+     * @notice https://stackoverflow.com/questions/47129173/how-to-convert-uint-to-string-in-solidity,
      * @return result Updated template by a task condition
      */
     function buildStringByTemplate(string calldata template) external pure returns (string memory) {
@@ -45,35 +49,39 @@ contract TestTask {
         uint256 number = 1250;
         string memory result;
 
-        /**
-         * Write your code here
-         * Try to do with the lowest gas consumption.
-         * If you will use some libraries or ready solutions,
-         * please add links in the "notice" comments section before the function.
-         */
-
         bytes memory templateBytes = bytes(template);
-        bytes memory accountBytes = bytes("{account}");
-        bytes memory numberBytes = bytes("{number}");
 
         uint256 i;
         uint256 j;
 
         for (i = 0; i < templateBytes.length; i++) {
-            if (templateBytes[i] == accountBytes[0]) {
-                if (templateBytes[i + 1] == accountBytes[1]) {
-                    string memory subTemp = substring(string(templateBytes), j, i - 1);
+            
+            if (templateBytes[i] == "{") {
+                
+                if (templateBytes[i + 1] == "a") {
+                    
+                    string memory subTemp = subString(template, j, i - 1);
                     string memory accountString = _toChecksumString(account);
                     result = string(abi.encodePacked(result, subTemp, " 0x", accountString));
-
-                    i += accountBytes.length - 1;
-                    j = i + 1;
-                } else if (templateBytes[i + 1] == numberBytes[1]) {
-                    string memory subTemp = substring(string(templateBytes), j, i - 1);
+                    while (templateBytes[i] != "}") {
+                        i++;
+                    }
+                    
+                    i++;
+                    j = i;
+                    
+                } else if (templateBytes[i + 1] == "n") {
+                    
+                    string memory subTemp = subString(template, j, i - 1);
                     string memory numberString = uintToString(number);
                     result = string(abi.encodePacked(result, subTemp, " ", numberString));
-                    i += numberBytes.length - 1;
-                    j = i + 1;
+                    
+                    while (templateBytes[i] != "}") {
+                        i++;
+                    }
+                    
+                    i++;
+                    j = i;
                 }
             }
         }
@@ -81,18 +89,110 @@ contract TestTask {
         return (result);
     }
 
-    function substring(
+
+    ///             ///
+    ///    Task 2   ///
+    ///             ///
+
+    /**
+     * @dev Test task condition 2:
+     *
+     * @dev Write a function which takes an array of strings as input and outputs
+     * @dev with one concatenated string. Function also should trim mirroring characters
+     * @dev of each two consecutive array string elements. In two consecutive string elements
+     * @dev "apple" and "electricity", mirroring characters are considered to be "le" and "el"
+     * @dev and as a result these characters should be trimmed from both string elements,
+     * @dev and concatenated string should be returned by the function. You may assume that
+     * @dev array will consist of at least of one element, each element won't be an empty string.
+     * @dev You may also assume that each element will contain only ascii characters.
+     *
+     * @dev Example 1
+     * @dev input:  "apple", "electricity", "year"
+     * @dev output: "appectricitear"
+     * 
+     * @param data array of strings 
+     * @notice You can see more examples in a Task2Test smart contract.
+     * @notice Using subString https://ethereum.stackexchange.com/questions/63908/address-checksum-solidity-implementation
+     * @return result Minimized string by a task condition
+     */
+    function trimMirroringChars(string[] memory data) external pure returns (string memory) {
+        string memory result;
+
+        uint256 i;
+        uint256 j;
+        uint256 k;
+        uint256 lenOne;
+        uint256 lenTwo;
+        uint256 len;
+        result = data[0];
+        
+        for (i = 0; i < data.length - 1; i++) {
+            
+            bytes memory dataBytesOne = bytes(result);
+            bytes memory dataBytesTwo = bytes(data[i + 1]);
+            lenOne = dataBytesOne.length;
+            lenTwo = dataBytesTwo.length;
+            
+            if (lenOne > lenTwo) 
+               len = lenTwo;
+            else 
+               len = lenOne;
+
+            for ((j = 0, k = lenOne - 1); j < len; ( j++, k-- )) {
+                
+                if (dataBytesTwo[j] == dataBytesOne[k]) {
+                    
+                } else 
+                    break;
+                
+            }
+            
+            string memory subDataOne = subString(string(dataBytesOne), 0, k + 1);
+            string memory subDataTwo = subString(string(dataBytesTwo), j, dataBytesTwo.length);
+
+            result = string(abi.encodePacked(subDataOne, subDataTwo));
+        }
+
+        return result;
+    }
+    
+     /**
+     * @dev subString returns the sub part of a big string according to start and end index
+     * @dev using helper functions _toChecksumCapsFlags, _toAsciiString
+     * @param str the string 
+     * @param startIndex sub string start index value 
+     * @param endIndex sub string end index value 
+     * 
+     * @notice Using subString https://ethereum.stackexchange.com/questions/63908/address-checksum-solidity-implementation
+     * @return result sub string
+     */
+
+    function subString(
         string memory str,
         uint256 startIndex,
         uint256 endIndex
-    ) internal pure returns (string memory) {
+    ) 
+    internal pure returns (string memory) 
+    {
+        
         bytes memory strBytes = bytes(str);
         bytes memory result = new bytes(endIndex - startIndex);
+        
         for (uint256 i = startIndex; i < endIndex; i++) {
+            
             result[i - startIndex] = strBytes[i];
+            
         }
         return string(result);
     }
+    
+     /**
+     * @dev _toChecksumString returns Checksum address string 
+     *
+     * @param account address 
+     * @notice using https://ethereum.stackexchange.com/questions/63908/address-checksum-solidity-implementation,
+     * @return asciiString sub string
+     */
 
     function _toChecksumString(address account) internal pure returns (string memory asciiString) {
         // convert the account argument from address to bytes.
@@ -138,12 +238,17 @@ contract TestTask {
 
         return string(asciiBytes);
     }
+    
+     /**
+     * @dev _toChecksumCapsFlags returns bool array of characterCapitalized
+     * @dev this is a helper function to _toChecksumString
+     * @param account address 
+     * @notice using https://ethereum.stackexchange.com/questions/63908/address-checksum-solidity-implementation,
+     * @return characterCapitalized array 
+     */
 
-    function _toChecksumCapsFlags(address account)
-        internal
-        pure
-        returns (bool[40] memory characterCapitalized)
-    {
+
+    function _toChecksumCapsFlags(address account) internal pure returns (bool[40] memory characterCapitalized) {
         // convert the address to bytes.
         bytes20 a = bytes20(account);
 
@@ -169,6 +274,14 @@ contract TestTask {
         }
     }
 
+     /**
+     * @dev _toAsciiString returns asciiString
+     * @dev this is a helper function to _toChecksumString
+     * @param data bytes20  
+     * @notice using https://ethereum.stackexchange.com/questions/63908/address-checksum-solidity-implementation,
+     * @return asciiString string 
+     */
+
     function _toAsciiString(bytes20 data) internal pure returns (string memory asciiString) {
         // create an in-memory fixed-size bytes array.
         bytes memory asciiBytes = new bytes(40);
@@ -193,6 +306,7 @@ contract TestTask {
         return string(asciiBytes);
     }
 
+
     function _getAsciiOffset(uint8 nibble, bool caps) internal pure returns (uint8 offset) {
         // to convert to ascii characters, add 48 to 0-9, 55 to A-F, & 87 to a-f.
         if (nibble < 10) {
@@ -203,86 +317,38 @@ contract TestTask {
             offset = 87;
         }
     }
+    
+     /**
+     * @dev uintToString returns a string for given uint number  
+     * @dev this is a helper function to buildStringByTemplate
+     * @param num that needs to be converted to string   
+     * @notice https://stackoverflow.com/questions/47129173/how-to-convert-uint-to-string-in-solidity,
+     * @return str string of given number 
+     */
 
-    function uintToString(uint256 v) internal pure returns (string memory str) {
+    function uintToString(uint256 num) internal pure returns (string memory str) {
         uint256 maxlength = 100;
         bytes memory reversed = new bytes(maxlength);
         uint256 i = 0;
-        while (v != 0) {
-            uint256 remainder = v % 10;
-            v = v / 10;
+        
+        while (num != 0) {
+            
+            uint256 remainder = num % 10;
+            num = num / 10;
             reversed[i++] = bytes1(uint8(48 + remainder));
+            
         }
+        
         bytes memory s = new bytes(i);
+        
         for (uint256 j = 0; j < i; j++) {
+            
             s[j] = reversed[i - 1 - j];
         }
         str = string(s);
     }
-
-    ///             ///
-    ///    Task 2   ///
-    ///             ///
-
-    /**
-     * @dev Test task condition 2:
-     *
-     * @dev Write a function which takes an array of strings as input and outputs
-     * @dev with one concatenated string. Function also should trim mirroring characters
-     * @dev of each two consecutive array string elements. In two consecutive string elements
-     * @dev "apple" and "electricity", mirroring characters are considered to be "le" and "el"
-     * @dev and as a result these characters should be trimmed from both string elements,
-     * @dev and concatenated string should be returned by the function. You may assume that
-     * @dev array will consist of at least of one element, each element won't be an empty string.
-     * @dev You may also assume that each element will contain only ascii characters.
-     *
-     * @dev Example 1
-     * @dev input:  "apple", "electricity", "year"
-     * @dev output: "appectricitear"
-     *
-     * @notice You can see more examples in a Task2Test smart contract.
-     *
-     * @return result Minimized string by a task condition
-     */
-    function trimMirroringChars(string[] memory data) external pure returns (string memory) {
-        string memory result;
-
-        /**
-         * Write your code here
-         * Try to do with the lowest gas consumption.
-         * If you will use some libraries or ready solutions,
-         * please add links in the "notice" comments section before the function.
-         */
-
-        uint256 i;
-        uint256 j;
-        uint256 k;
-        uint256 lenOne;
-        uint256 lenTwo;
-        result = data[0];
-        for (i = 0; i < data.length - 1; i++) {
-            bytes memory dataBytesOne = bytes(result);
-            bytes memory dataBytesTwo = bytes(data[i + 1]);
-            lenOne = dataBytesOne.length;
-            lenTwo = dataBytesTwo.length;
-            k = lenOne - 1;
-
-            for (j = 0; j < lenTwo; j++) {
-                if (dataBytesTwo[j] == dataBytesOne[k]) {
-                    k--;
-                } else {
-                    break;
-                }
-            }
-            string memory subDataOne = substring(string(dataBytesOne), 0, k + 1);
-            string memory subDataTwo = substring(string(dataBytesTwo), j, dataBytesTwo.length);
-
-            result = string(abi.encodePacked(subDataOne, subDataTwo));
-        }
-
-        return result;
-    }
 }
+
 
 /**
  * @title Task 1 tests
@@ -309,6 +375,7 @@ contract Task1Test {
         );
     }
 
+
     /**
      * @dev Test task result
      * @dev template 2: "number: {number}, account: {account}"
@@ -321,6 +388,7 @@ contract Task1Test {
             "Result is equal to 'number: 1250, account: 0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c'"
         );
     }
+
 
     /**
      * @dev Test task result
@@ -335,6 +403,7 @@ contract Task1Test {
         );
     }
 
+
     /**
      * @dev Test task result
      * @dev template 4: "account: {account}, account: {account}"
@@ -347,7 +416,22 @@ contract Task1Test {
             "Result is equal to 'account: 0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c, account: 0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c'"
         );
     }
+
+
+    /**
+     * @dev Test task result
+     * @dev template 4: "account: {accountxyz}, number: {numberxyz}"
+     * @dev             "account: 0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c, number: 1250"
+     */
+    function checkTemplate5() public {
+        Assert.equal(
+            task.buildStringByTemplate("account: {account}, number: {numberxyz}"),
+            "account: 0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c, number: 1250",
+            "Result is equal to 'account: 0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c, number: 1250'"
+        );
+    }
 }
+
 
 /**
  * @title Task 2 tests
@@ -379,6 +463,7 @@ contract Task2Test {
         );
     }
 
+
     /**
      * @dev Test task result
      * @dev input ["ethereum", "museum", "must", "street"]
@@ -390,6 +475,25 @@ contract Task2Test {
         words[1] = "museum";
         words[2] = "must";
         words[3] = "tree";
+
+        Assert.equal(
+            task.trimMirroringChars(words),
+            "etheresesree",
+            "Result is equal to 'etheresereet'"
+        );
+    }
+
+
+    /**
+     * @dev Test task result
+     * @dev input ["aaaaapple","elppaaa","aapple"]
+     * @dev output "pple"
+     */
+    function checkCase3() public {
+        string[] memory words = new string[](4);
+        words[0] = "aaaaapple";
+        words[1] = "elppaaa";
+        words[2] = "aapple";
 
         Assert.equal(
             task.trimMirroringChars(words),
